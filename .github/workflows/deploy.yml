@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: "file:./prisma/dev.db"
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: |
+            .next/**,
+            public/**,
+            package.json,
+            package-lock.json,
+            node_modules/**,
+            prisma/**,
+            next.config.ts,
+          target: /var/www/ecommerce
+
+      - name: Restart Application
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/ecommerce
+            export NODE_ENV=production
+            export DATABASE_URL="file:./prisma/dev.db"
+            export STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            export STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+            npx prisma migrate deploy
+            pm2 restart ecommerce || pm2 start npm --name ecommerce -- start
