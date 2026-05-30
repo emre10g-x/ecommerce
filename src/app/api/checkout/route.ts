@@ -10,18 +10,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, address, city, postalCode } = body;
+    const { name, email, city, district, address, postalCode, userId } = body;
 
-    if (!name || !email || !address || !city || !postalCode) {
+    if (!name || !email || !city || !district || !address || !postalCode || !userId) {
       return Response.json({ error: "Tüm alanlar zorunlu" }, { status: 400 });
     }
 
     const lineItems = cartItems.map((item) => ({
       price_data: {
         currency: "try",
-        product_data: {
-          name: item.name,
-        },
+        product_data: { name: item.name },
         unit_amount: item.price,
       },
       quantity: item.quantity,
@@ -34,10 +32,12 @@ export async function POST(request: NextRequest) {
       cancel_url: `${request.nextUrl.origin}/cart`,
       customer_email: email,
       metadata: {
+        userId,
         name,
         email,
-        address,
         city,
+        district,
+        address,
         postalCode,
         items: JSON.stringify(
           cartItems.map((i) => ({

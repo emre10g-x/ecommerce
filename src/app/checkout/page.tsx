@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/cart";
+import { getSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/utils";
 import CheckoutForm from "./CheckoutForm";
 
 export default async function CheckoutPage() {
-  const cartItems = await getCart();
+  const user = await getSession();
+  if (!user) redirect("/login?redirect=/checkout");
 
-  if (cartItems.length === 0) {
-    redirect("/cart");
-  }
+  const cartItems = await getCart();
+  if (cartItems.length === 0) redirect("/cart");
 
   const total = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
@@ -36,7 +37,7 @@ export default async function CheckoutPage() {
           </div>
         </div>
 
-        <CheckoutForm total={total} />
+        <CheckoutForm total={total} userId={user.id} email={user.email} name={user.name} />
       </div>
     </div>
   );

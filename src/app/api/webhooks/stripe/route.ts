@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
+      const metadata = session.metadata!;
 
-      const { name, email, address, city, postalCode, items } = session.metadata!;
-
+      const { userId, name, email, city, district, address, postalCode, items } = metadata;
       const parsedItems = JSON.parse(items);
 
       const total = parsedItems.reduce(
@@ -32,10 +32,12 @@ export async function POST(request: NextRequest) {
 
       await prisma.order.create({
         data: {
+          userId,
           email,
           name,
-          address,
           city,
+          district,
+          address,
           postalCode,
           total,
           status: "paid",

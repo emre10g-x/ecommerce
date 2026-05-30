@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getCart } from "@/lib/cart";
-import { FiShoppingCart } from "react-icons/fi";
+import { getSession } from "@/lib/auth";
+import { FiShoppingCart, FiUser } from "react-icons/fi";
 
 export default async function Navbar() {
   const cart = await getCart();
+  const user = await getSession();
   const itemCount = cart.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
@@ -17,6 +19,19 @@ export default async function Navbar() {
             <Link href="/products" className="text-gray-600 hover:text-gray-900">
               Ürünler
             </Link>
+            {user ? (
+              <Link
+                href="/dashboard/orders"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+              >
+                <FiUser className="w-5 h-5" />
+                <span className="hidden sm:inline text-sm">{user.name}</span>
+              </Link>
+            ) : (
+              <Link href="/login" className="text-gray-600 hover:text-gray-900 text-sm">
+                Giriş Yap
+              </Link>
+            )}
             <Link href="/cart" className="relative text-gray-600 hover:text-gray-900">
               <FiShoppingCart className="w-6 h-6" />
               {itemCount > 0 && (

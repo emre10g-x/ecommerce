@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen flex flex-col bg-gray-50">
+      <body className="min-h-screen flex flex-col bg-gray-50" suppressHydrationWarning>
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="bg-white border-t border-gray-200 py-8 text-center text-sm text-gray-500">
